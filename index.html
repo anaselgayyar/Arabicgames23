@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تدريبات محاكاة الحوار - البطل نوح</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 & Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Baloo Bhaijaan 2', cursive;
+            background-color: #f0fdf4;
+            background-image: radial-gradient(#bbf7d0 2px, transparent 2px);
+            background-size: 30px 30px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: pan-y;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 4px solid #fff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .btn-game {
+            transition: all 0.2s;
+            border-bottom-width: 4px;
+        }
+        .btn-game:active:not(:disabled) {
+            transform: translateY(4px);
+            border-bottom-width: 0px;
+        }
+
+        .correct-bg { background-color: #4ade80 !important; color: white !important; border-color: #22c55e !important; }
+        .wrong-bg { background-color: #f87171 !important; color: white !important; border-color: #ef4444 !important; }
+
+        /* Animations */
+        @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .anim-pop { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
+        .anim-shake { animation: shake 0.4s ease; }
+        
+        @keyframes bounce-scale { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .anim-bounce { animation: bounce-scale 0.5s ease; }
+
+        @keyframes attentionGlow {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); transform: scale(1); }
+            50% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); transform: scale(1); }
+        }
+        .anim-attention { animation: attentionGlow 2s infinite ease-in-out; }
+
+        @keyframes waveText {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .wave-word {
+            display: inline-block;
+            animation: waveText 1.5s infinite ease-in-out;
+        }
+        .delay-1 { animation-delay: 0.0s; }
+        .delay-2 { animation-delay: 0.15s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.45s; }
+
+        .chat-bubble {
+            max-width: 85%; padding: 12px 20px; font-size: 1.4rem; line-height: 1.8;
+            border-radius: 18px; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            animation: popIn 0.4s ease; margin-bottom: 12px;
+        }
+        .bubble-right { align-self: flex-start; border-bottom-right-radius: 4px; }
+        .bubble-left { align-self: flex-end; border-bottom-left-radius: 4px; }
+        .speaker-tag { font-size: 0.95rem; font-weight: 800; display: block; margin-bottom: 4px; opacity: 0.9; }
+
+        /* Character Colors - New Characters Added */
+        .mustafa { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); color: #0369a1; border: 1px solid #7dd3fc; }
+        .qusai { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #b45309; border: 1px solid #fcd34d; }
+        .issam { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); color: #4c1d95; border: 1px solid #c4b5fd; }
+        .saleh { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412; border: 1px solid #fdba74; }
+        .sadiq { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border: 1px solid #86efac; }
+        .sabir { background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%); color: #9f1239; border: 1px solid #fda4af; }
+
+        .hidden-screen { display: none !important; }
+
+        .review-badge {
+            display: inline-block; background-color: #fef08a; color: #854d0e; font-size: 1.1rem;
+            padding: 4px 12px; border-radius: 12px; margin-right: 10px; vertical-align: middle; border: 2px solid #eab308;
+        }
+
+        /* MCQ Options Grid */
+        .option-btn {
+            background-color: #f8fafc; border: 3px solid #e2e8f0; padding: 16px; border-radius: 16px;
+            font-size: 1.3rem; font-family: inherit; cursor: pointer; text-align: right;
+            transition: all 0.2s ease; color: #334155; font-weight: 700;
+        }
+        .option-btn:hover:not(:disabled) { border-color: #3b82f6; background-color: #eff6ff; transform: translateX(-4px); }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.9; }
+
+        .q-progress-bg { background-color: #e2e8f0; height: 10px; border-radius: 999px; overflow: hidden; width: 100%; margin-bottom: 20px;}
+        .q-progress-fill { background: linear-gradient(90deg, #3b82f6, #60a5fa); height: 100%; width: 0%; transition: width 0.4s ease; }
+
+        .toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background-color: #333; color: white; padding: 12px 24px; border-radius: 999px;
+            font-size: 1.2rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999;
+        }
+        .toast.show { opacity: 1; }
+        .eng-text { font-family: 'Segoe UI', system-ui, sans-serif; direction: ltr; display: inline-block; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-800 pb-10">
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-green-50 z-50 flex items-center justify-center transition-opacity duration-500">
+        <div class="text-4xl md:text-5xl font-bold text-blue-600 drop-shadow-md text-center leading-relaxed">
+            <span class="wave-word delay-1">جَارِي</span>
+            <span class="wave-word delay-2">تَجْهِيزُ</span>
+            <span class="wave-word delay-3">اللُّعْبَةِ</span>
+            <span class="wave-word delay-4">لِنُوح...</span>
+            <br><span class="text-6xl mt-4 inline-block anim-bounce">⏳</span>
+        </div>
+    </div>
+
+    <!-- Header Taskbar -->
+    <header class="w-full p-3 md:p-4 flex flex-wrap justify-between items-center bg-white shadow-md z-10 sticky top-0 gap-2">
+        <div class="flex items-center gap-2 md:gap-4 text-base md:text-xl">
+            <div class="bg-yellow-100 text-yellow-900 px-3 py-1 md:px-4 md:py-2 rounded-full font-bold border-b-4 border-yellow-400 flex items-center gap-1 transition-colors duration-300" id="score-badge">
+                ⭐️ <span id="global-score">0</span>
+            </div>
+            <div class="bg-green-100 text-green-900 px-3 py-1 md:px-4 md:py-2 rounded-full font-bold border-b-4 border-green-400 flex items-center gap-1">
+                ✅ <span id="global-correct">0</span>
+            </div>
+            <div class="bg-red-100 text-red-900 px-3 py-1 md:px-4 md:py-2 rounded-full font-bold border-b-4 border-red-400 flex items-center gap-1">
+                ❌ <span id="global-wrong">0</span>
+            </div>
+        </div>
+        
+        <h1 class="text-xl md:text-3xl font-extrabold text-blue-600 tracking-wide drop-shadow-sm hidden md:block">مُحَاكَاةُ الحِوَارِ 💬</h1>
+        
+        <button id="btn-home" class="bg-blue-400 hover:bg-blue-500 text-white px-5 py-2 rounded-full font-bold text-lg md:text-xl border-b-4 border-blue-600 btn-game hidden">
+            🏠 الرَّئيسيَّة
+        </button>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="flex-1 flex flex-col items-center p-4 w-full max-w-6xl mx-auto mt-2">
+        
+        <!-- Screen: Main Menu -->
+        <div id="screen-menu" class="w-full glass-card rounded-3xl p-6 md:p-10 text-center anim-pop hidden-screen">
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-8 text-blue-700">مَرْحَباً بِكَ يَا نُوح! 🦸‍♂️</h2>
+            <h3 class="text-2xl font-bold mb-6 text-gray-600">اخْتَرْ التَّدْرِيبَ لِنَبْدَأَ المِحَادَثَة</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full mx-auto" id="phase-grid">
+                <!-- Levels will be injected here -->
+            </div>
+        </div>
+
+        <!-- Screen: Game -->
+        <div id="screen-game" class="w-full glass-card rounded-3xl p-4 md:p-8 flex flex-col anim-pop min-h-[70vh] relative hidden-screen">
+            
+            <div class="text-center mb-6 border-b-2 border-gray-200 pb-4">
+                <h2 id="level-title" class="text-3xl font-bold text-blue-700 mb-2"></h2>
+                <h3 id="level-instruction" class="text-xl md:text-2xl font-bold text-gray-500 eng-text w-full text-center"></h3>
+            </div>
+
+            <!-- Roleplay UI -->
+            <div class="flex flex-col lg:flex-row gap-6 w-full h-full pb-8 flex-1">
+                <!-- Chat History Panel (Right side in RTL) -->
+                <div class="lg:w-3/5 bg-gray-50 border-2 border-gray-200 rounded-3xl p-6 shadow-inner overflow-y-auto max-h-[60vh] flex flex-col" id="chat-container">
+                    <!-- Bubbles injected dynamically here -->
+                </div>
+                
+                <!-- Interaction Panel (Left side in RTL) -->
+                <div class="lg:w-2/5 flex flex-col gap-4">
+                    <div class="bg-white border-2 border-blue-100 rounded-3xl p-6 shadow-md h-full flex flex-col relative" id="interaction-panel">
+                        <div class="q-progress-bg">
+                            <div class="q-progress-fill" id="progress-bar"></div>
+                        </div>
+                        <div id="question-text" class="mb-6"></div>
+                        <div id="options-grid" class="flex flex-col gap-4 flex-1">
+                        </div>
+                        
+                        <!-- Overlay when waiting for PC -->
+                        <div id="waiting-overlay" class="absolute inset-0 bg-white/80 rounded-3xl flex items-center justify-center hidden z-10">
+                            <span class="text-2xl font-bold text-gray-400 anim-pulse">جَارِي الكِتَابَة... ✍️</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Next Button -->
+            <div id="next-btn-container" class="w-full flex justify-center mt-8 hidden pb-4 z-50 relative">
+                <button id="btn-next" class="bg-blue-500 hover:bg-blue-600 text-white px-12 py-4 rounded-full font-bold text-2xl border-b-4 border-blue-700 btn-game shadow-lg flex items-center gap-3 anim-pop">
+                    التَّالِي 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen: Final Report -->
+        <div id="screen-report" class="w-full max-w-4xl glass-card rounded-3xl p-6 md:p-10 text-center hidden-screen anim-pop overflow-y-auto max-h-[90vh]">
+            <div class="text-7xl mb-6">🏆</div>
+            <h2 class="text-5xl font-extrabold text-yellow-500 mb-4">مُبَارَكٌ يَا بَطَل نُوح!</h2>
+            <p class="text-2xl md:text-3xl text-gray-600 mb-8">لَقَدْ أَنْهَيْتَ جَمِيعَ التَّدْرِيبَاتِ بِنَجَاحٍ بَاهِر</p>
+            
+            <!-- WhatsApp Button -->
+            <div class="flex flex-col gap-3 mb-12 w-full max-w-lg mx-auto bg-green-50 p-6 md:p-8 rounded-3xl border-4 border-green-200 shadow-sm relative overflow-visible">
+                <p class="text-xl md:text-2xl font-bold text-red-600 mb-2 anim-pulse flex items-center justify-center gap-2">
+                    <span>⚠️</span> لا تنسَ إرسال النتيجة للمعلم! <span>⚠️</span>
+                </p>
+                <button onclick="sendReportToTeacher()" id="btn-whatsapp" dir="ltr" class="bg-[#25D366] hover:bg-[#128C7E] text-white px-8 py-5 rounded-full font-bold text-2xl md:text-3xl btn-game flex items-center justify-center gap-4 w-full font-sans transition-colors anim-attention cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                    </svg>
+                    إرسال التقرير للمعلم
+                </button>
+            </div>
+
+            <!-- Statistics -->
+            <div class="bg-blue-50 rounded-2xl p-6 md:p-8 mb-8 border-2 border-blue-200">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xl md:text-2xl font-bold text-blue-800 items-center">
+                    <div>إِجْمَالِي النِّقَاط:</div>
+                    <div class="text-yellow-500 text-3xl md:text-4xl">⭐️ <span id="report-score">0</span></div>
+                    <div>الإِجَابَاتُ الصَّحِيحَة:</div>
+                    <div class="text-green-500 text-3xl md:text-4xl">✅ <span id="report-correct">0</span></div>
+                    <div>الإِجَابَاتُ الخَاطِئَة:</div>
+                    <div class="text-red-500 text-3xl md:text-4xl">❌ <span id="report-wrong">0</span></div>
+                    <div>الوَقْتُ المُسْتَغْرَق:</div>
+                    <div class="text-blue-500 text-3xl md:text-4xl" id="report-time">00:00</div>
+                </div>
+            </div>
+
+            <!-- Error Log Table -->
+            <div id="error-log-container" class="mb-10 text-right hidden">
+                <h3 class="text-3xl font-bold text-red-600 mb-6 bg-red-100 px-6 py-3 rounded-xl inline-block">سِجِلُّ الأَخْطَاءِ 📝</h3>
+                <div class="overflow-x-auto rounded-xl border-2 border-red-200">
+                    <table class="w-full text-lg md:text-xl border-collapse text-center">
+                        <thead>
+                            <tr class="bg-red-50 text-red-800">
+                                <th class="border border-red-200 p-4 w-24">المستوى</th>
+                                <th class="border border-red-200 p-4">التعليمات (Hint)</th>
+                                <th class="border border-red-200 p-4">إجابة الطالب ❌</th>
+                                <th class="border border-red-200 p-4">الإجابة الصحيحة ✅</th>
+                            </tr>
+                        </thead>
+                        <tbody id="error-log-body" class="bg-white">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">تم النسخ وجاري التحويل للواتساب...</div>
+
+    <script>
+        // --- Game Data (Roleplay Simulator) - Updated with New Dialogues ---
+        const gameData = {
+            1: {
+                title: "التدريب ١: حوار الصلاة (دور قصي)",
+                shortTitle: "دور قصي",
+                instruction: "Play the role of Qusai. Choose the correct response.",
+                userRole: "قُصَيّ",
+                pcRole: "مُصْطَفَى",
+                steps: [
+                    { type: "pc", text: "أَيْنَ تُصَلِّي الصَّلَوَاتِ الْخَمْسَ ؟" },
+                    { type: "user", hint: "Say you pray Zuhr, Asr, Maghrib, and Isha in Bilal Mosque.", correct: "أُصَلِّي الظُّهْرَ ، وَالْعَصْرَ ، وَالْمَغْرِبَ ، وَالْعِشَاءَ فِي مَسْجِدِ بِلَالٍ.", options: ["أُصَلِّي الظُّهْرَ ، وَالْعَصْرَ ، وَالْمَغْرِبَ ، وَالْعِشَاءَ فِي مَسْجِدِ بِلَالٍ.", "أُصَلِّي فِي الْبَيْتِ دَائِماً.", "أُصَلِّي الْفَجْرَ فِي الْمَسْجِدِ.", "الْمَسْجِدُ بَعِيدٌ جِدّاً عَنِّي."] },
+                    { type: "pc", text: "وَأَيْنَ تُصَلِّي الْفَجْرَ ؟" },
+                    { type: "user", hint: "Say you pray Fajr at home.", correct: "أُصَلِّي الْفَجْرَ فِي الْبَيْتِ .", options: ["أُصَلِّي الْفَجْرَ فِي الْبَيْتِ .", "أُصَلِّي الْفَجْرَ فِي الْمَسْجِدِ .", "أُصَلِّي الْفَجْرَ مُتَأَخِّراً .", "لَا أُصَلِّي الْفَجْرَ ."] },
+                    { type: "pc", text: "لِمَاذَا تُصَلِّي الْفَجْرَ فِي الْبَيْتِ ؟" },
+                    { type: "user", hint: "Say you don't hear the Adhan.", correct: "لَا أَسْمَعُ الْأَذَانَ .", options: ["لَا أَسْمَعُ الْأَذَانَ .", "لِأَنَّنِي مَرِيضٌ .", "الْمَسْجِدُ مُغْلَقٌ .", "لَا أُحِبُّ الذَّهَابَ ."] },
+                    { type: "pc", text: "هَلْ تَسْتَيْقِظُ مُتَأَخِّراً ؟" },
+                    { type: "user", hint: "Say yes, after Fajr prayer.", correct: "نَعَمْ ، بَعْدَ صَلَاةِ الْفَجْرِ .", options: ["نَعَمْ ، بَعْدَ صَلَاةِ الْفَجْرِ .", "لَا ، قَبْلَ صَلَاةِ الْفَجْرِ .", "نَعَمْ ، فِي الْمَسَاءِ .", "أَنَا أَسْتَيْقِظُ مُبَكِّراً ."] },
+                    { type: "pc", text: "إِسْتَيْقِظْ مُبَكِّراً ." },
+                    { type: "user", hint: "Say you can't, you work at night.", correct: "لَا أَسْتَطِيعُ ، أَعْمَلُ فِي اللَّيْلِ .", options: ["لَا أَسْتَطِيعُ ، أَعْمَلُ فِي اللَّيْلِ .", "نَعَمْ ، سَأَسْتَيْقِظُ مُبَكِّراً .", "لَا أَسْتَطِيعُ ، أَنَا مَرِيضٌ .", "هَذَا صَعْبٌ جِدّاً ."] },
+                    { type: "pc", text: "ضَعِ الْمُنَبِّهَ بِجَانِبِكَ ." },
+                    { type: "user", hint: "Say this is a good idea, may Allah reward you.", correct: "هَذِهِ فِكْرَةٌ طَيِّبَةٌ . جَزَاكَ اللَّهُ خَيْراً .", options: ["هَذِهِ فِكْرَةٌ طَيِّبَةٌ . جَزَاكَ اللَّهُ خَيْراً .", "لَا أُرِيدُ ذَلِكَ .", "هَذِهِ فِكْرَةٌ سَيِّئَةٌ .", "أَيْنَ الْمُنَبِّهُ ؟"] }
+                ]
+            },
+            2: {
+                title: "التدريب ٢: حوار الصلاة (دور مصطفى)",
+                shortTitle: "دور مصطفى",
+                instruction: "Play the role of Mustafa. Choose the correct response.",
+                userRole: "مُصْطَفَى",
+                pcRole: "قُصَيّ",
+                steps: [
+                    { type: "user", hint: "Ask where he prays the five prayers.", correct: "أَيْنَ تُصَلِّي الصَّلَوَاتِ الْخَمْسَ ؟", options: ["أَيْنَ تُصَلِّي الصَّلَوَاتِ الْخَمْسَ ؟", "مَتَى تُصَلِّي الْفَجْرَ ؟", "هَلْ تُصَلِّي فِي الْمَسْجِدِ ؟", "كَيْفَ تُصَلِّي الظُّهْرَ ؟"] },
+                    { type: "pc", text: "أُصَلِّي الظُّهْرَ ، وَالْعَصْرَ ، وَالْمَغْرِبَ ، وَالْعِشَاءَ فِي مَسْجِدِ بِلَالٍ." },
+                    { type: "user", hint: "Ask where he prays Fajr.", correct: "وَأَيْنَ تُصَلِّي الْفَجْرَ ؟", options: ["وَأَيْنَ تُصَلِّي الْفَجْرَ ؟", "وَمَتَى تُصَلِّي الْعِشَاءَ ؟", "هَلْ تُصَلِّي الْفَجْرَ ؟", "لِمَاذَا تُصَلِّي فِي الْبَيْتِ ؟"] },
+                    { type: "pc", text: "أُصَلِّي الْفَجْرَ فِي الْبَيْتِ ." },
+                    { type: "user", hint: "Ask why he prays Fajr at home.", correct: "لِمَاذَا تُصَلِّي الْفَجْرَ فِي الْبَيْتِ ؟", options: ["لِمَاذَا تُصَلِّي الْفَجْرَ فِي الْبَيْتِ ؟", "لِمَاذَا لَا تُصَلِّي ؟", "هَلْ الْبَيْتُ قَرِيبٌ ؟", "أَيْنَ بَيْتُكَ ؟"] },
+                    { type: "pc", text: "لَا أَسْمَعُ الْأَذَانَ ." },
+                    { type: "user", hint: "Ask if he wakes up late.", correct: "هَلْ تَسْتَيْقِظُ مُتَأَخِّراً ؟", options: ["هَلْ تَسْتَيْقِظُ مُتَأَخِّراً ؟", "هَلْ تَنَامُ مُبَكِّراً ؟", "هَلْ أَنْتَ مَرِيضٌ ؟", "لِمَاذَا تَنَامُ كَثِيراً ؟"] },
+                    { type: "pc", text: "نَعَمْ ، بَعْدَ صَلَاةِ الْفَجْرِ ." },
+                    { type: "user", hint: "Tell him to wake up early.", correct: "إِسْتَيْقِظْ مُبَكِّراً .", options: ["إِسْتَيْقِظْ مُبَكِّراً .", "نَمْ مُتَأَخِّراً .", "اذْهَبْ إِلَى الْمَسْجِدِ .", "لَا تَنَمْ ."] },
+                    { type: "pc", text: "لَا أَسْتَطِيعُ ، أَعْمَلُ فِي اللَّيْلِ ." },
+                    { type: "user", hint: "Tell him to put the alarm next to him.", correct: "ضَعِ الْمُنَبِّهَ بِجَانِبِكَ .", options: ["ضَعِ الْمُنَبِّهَ بِجَانِبِكَ .", "اتْرُكِ الْعَمَلَ .", "اشْتَرِ سَاعَةً جَدِيدَةً .", "صَلِّ فِي الْعَمَلِ ."] },
+                    { type: "pc", text: "هَذِهِ فِكْرَةٌ طَيِّبَةٌ . جَزَاكَ اللَّهُ خَيْراً ." }
+                ]
+            },
+            3: {
+                title: "التدريب ٣: حوار السفر (دور صالح)",
+                shortTitle: "دور صالح",
+                instruction: "Play the role of Saleh. Choose the correct response.",
+                userRole: "صَالِح",
+                pcRole: "عِصَام",
+                steps: [
+                    { type: "pc", text: "السَّلَامُ عَلَيْكُمْ ." },
+                    { type: "user", hint: "Reply to the greeting.", correct: "وَعَلَيْكُمُ السَّلَام .", options: ["وَعَلَيْكُمُ السَّلَام .", "أَهْلاً بِكَ .", "صَبَاحُ الْخَيْرِ .", "مَرْحَباً ."] },
+                    { type: "pc", text: "أَنَا مُسَافِرٌ إِلَى مَكَّةَ ، إِلَى أَيْنَ أَنْتَ مُسَافِرٌ ؟" },
+                    { type: "user", hint: "Say you travel to Madinah and ask why he travels to Makkah.", correct: "أَنَا مُسَافِرٌ إِلَى الْمَدِينَةِ . لِمَاذَا أَنْتَ مُسَافِرٌ إِلَى مَكَّةَ ؟", options: ["أَنَا مُسَافِرٌ إِلَى الْمَدِينَةِ . لِمَاذَا أَنْتَ مُسَافِرٌ إِلَى مَكَّةَ ؟", "أَنَا مُسَافِرٌ إِلَى مَكَّةَ أَيْضاً.", "أَنَا ذَاهِبٌ إِلَى الْمَدْرَسَةِ.", "لِمَاذَا أَنْتَ مُسَافِرٌ ؟"] },
+                    { type: "pc", text: "لِلصَّلَاةِ فِي الْمَسْجِدِ الْحَرَامِ . وَلِمَاذَا أَنْتَ مُسَافِرٌ إِلَى الْمَدِينَةِ ؟" },
+                    { type: "user", hint: "Say for prayer in Prophet's Mosque, ask about Jumu'ah.", correct: "لِلصَّلَاةِ فِي الْمَسْجِدِ النَّبَوِيِّ . أَيْنَ سَتُصَلِّي الْجُمُعَةَ ؟", options: ["لِلصَّلَاةِ فِي الْمَسْجِدِ النَّبَوِيِّ . أَيْنَ سَتُصَلِّي الْجُمُعَةَ ؟", "لِزِيَارَةِ صَدِيقِي . أَيْنَ سَتُصَلِّي ؟", "لِلصَّلَاةِ فِي الْمَسْجِدِ الْحَرَامِ .", "مَتَى سَتُصَلِّي الْجُمُعَةَ ؟"] },
+                    { type: "pc", text: "فِي الْمَسْجِدِ الْحَرَامِ، إِنْ شَاءَ الله . وَأَيْنَ سَتُصَلِّي الْجُمُعَةَ ؟" },
+                    { type: "user", hint: "Say in the Prophet's Mosque, God willing.", correct: "فِي الْمَسْجِدِ النَّبَوِيِّ، إِنْ شَاءَ الله .", options: ["فِي الْمَسْجِدِ النَّبَوِيِّ، إِنْ شَاءَ الله .", "فِي الْمَسْجِدِ الْحَرَامِ .", "فِي بَيْتِي، إِنْ شَاءَ الله .", "فِي مَسْجِدِ بِلَالٍ ."] },
+                    { type: "pc", text: "كَيْفَ سَتُسَافِرُ إِلَى الْمَدِينَةِ ؟" },
+                    { type: "user", hint: "Say you ride the plane.", correct: "أَرْكَبُ الطَّائِرَةَ .", options: ["أَرْكَبُ الطَّائِرَةَ .", "أَرْكَبُ السَّيَّارَةَ .", "أَرْكَبُ الْقِطَارَ .", "أَمْشِي عَلَى أَقْدَامِي ."] }
+                ]
+            },
+            4: {
+                title: "التدريب ٤: حوار السفر (دور عصام)",
+                shortTitle: "دور عصام",
+                instruction: "Play the role of Issam. Choose the correct response.",
+                userRole: "عِصَام",
+                pcRole: "صَالِح",
+                steps: [
+                    { type: "user", hint: "Start with the greeting.", correct: "السَّلَامُ عَلَيْكُمْ .", options: ["السَّلَامُ عَلَيْكُمْ .", "كَيْفَ حَالُكَ ؟", "مَسَاءُ الْخَيْرِ .", "إِلَى اللِّقَاءِ ."] },
+                    { type: "pc", text: "وَعَلَيْكُمُ السَّلَام ." },
+                    { type: "user", hint: "Say you travel to Makkah and ask where he travels to.", correct: "أَنَا مُسَافِرٌ إِلَى مَكَّةَ ، إِلَى أَيْنَ أَنْتَ مُسَافِرٌ ؟", options: ["أَنَا مُسَافِرٌ إِلَى مَكَّةَ ، إِلَى أَيْنَ أَنْتَ مُسَافِرٌ ؟", "أَنَا مُسَافِرٌ إِلَى الْمَدِينَةِ .", "هَلْ أَنْتَ مُسَافِرٌ ؟", "إِلَى أَيْنَ أَنْتَ ذَاهِبٌ ؟"] },
+                    { type: "pc", text: "أَنَا مُسَافِرٌ إِلَى الْمَدِينَةِ . لِمَاذَا أَنْتَ مُسَافِرٌ إِلَى مَكَّةَ ؟" },
+                    { type: "user", hint: "Say for prayer in Al-Masjid Al-Haram, ask why he travels to Madinah.", correct: "لِلصَّلَاةِ فِي الْمَسْجِدِ الْحَرَامِ . وَلِمَاذَا أَنْتَ مُسَافِرٌ إِلَى الْمَدِينَةِ ؟", options: ["لِلصَّلَاةِ فِي الْمَسْجِدِ الْحَرَامِ . وَلِمَاذَا أَنْتَ مُسَافِرٌ إِلَى الْمَدِينَةِ ؟", "لِلصَّلَاةِ فِي الْمَسْجِدِ النَّبَوِيِّ .", "لِلْعَمَلِ هُنَاكَ .", "وَلِمَاذَا أَنْتَ مُسَافِرٌ إِلَى مَكَّةَ ؟"] },
+                    { type: "pc", text: "لِلصَّلَاةِ فِي الْمَسْجِدِ النَّبَوِيِّ . أَيْنَ سَتُصَلِّي الْجُمُعَةَ ؟" },
+                    { type: "user", hint: "Say in Al-Masjid Al-Haram, ask where he will pray Jumu'ah.", correct: "فِي الْمَسْجِدِ الْحَرَامِ، إِنْ شَاءَ الله . وَأَيْنَ سَتُصَلِّي الْجُمُعَةَ ؟", options: ["فِي الْمَسْجِدِ الْحَرَامِ، إِنْ شَاءَ الله . وَأَيْنَ سَتُصَلِّي الْجُمُعَةَ ؟", "فِي الْمَسْجِدِ النَّبَوِيِّ .", "فِي الْبَيْتِ، إِنْ شَاءَ الله .", "مَتَى سَتُصَلِّي الْجُمُعَةَ ؟"] },
+                    { type: "pc", text: "فِي الْمَسْجِدِ النَّبَوِيِّ، إِنْ شَاءَ الله ." },
+                    { type: "user", hint: "Ask how he will travel to Madinah.", correct: "كَيْفَ سَتُسَافِرُ إِلَى الْمَدِينَةِ ؟", options: ["كَيْفَ سَتُسَافِرُ إِلَى الْمَدِينَةِ ؟", "مَتَى سَتُسَافِرُ ؟", "هَلْ تَرْكَبُ الطَّائِرَةَ ؟", "أَيْنَ الْمَدِينَةُ ؟"] },
+                    { type: "pc", text: "أَرْكَبُ الطَّائِرَةَ ." }
+                ]
+            },
+            5: {
+                title: "التدريب ٥: حوار المسجد (دور صادق)",
+                shortTitle: "دور صادق",
+                instruction: "Play the role of Sadiq. Choose the correct response.",
+                userRole: "صَادِق",
+                pcRole: "صَابِر",
+                steps: [
+                    { type: "user", hint: "Say this is the Asr Adhan.", correct: "هَذَا أَذَانُ الْعَصْرِ .", options: ["هَذَا أَذَانُ الْعَصْرِ .", "هَذَا أَذَانُ الْفَجْرِ .", "هَيَّا نَلْعَبُ .", "هَذَا مَسْجِدٌ كَبِيرٌ ."] },
+                    { type: "pc", text: "هَيَّا بِنَا إِلَى الْمَسْجِدِ ." },
+                    { type: "user", hint: "Say you pray at home.", correct: "أَنَا أُصَلِّي فِي الْبَيْتِ .", options: ["أَنَا أُصَلِّي فِي الْبَيْتِ .", "أَنَا أُصَلِّي فِي الْمَسْجِدِ .", "لَا أُرِيدُ الصَّلَاةَ .", "الْمَسْجِدُ مُغْلَقٌ ."] },
+                    { type: "pc", text: "الصَّلَاةُ فِي الْمَسْجِدِ أَفْضَلُ." },
+                    { type: "user", hint: "Say the mosque is far.", correct: "الْمَسْجِدُ بَعِيدٌ .", options: ["الْمَسْجِدُ بَعِيدٌ .", "الْمَسْجِدُ قَرِيبٌ .", "الصَّلَاةُ فِي الْبَيْتِ أَفْضَلُ.", "أَنَا لَسْتُ مَرِيضاً ."] },
+                    { type: "pc", text: "الْمَسْجِدُ قَرِيبٌ . هَلْ أَنْتَ مَرِيضٌ ؟" },
+                    { type: "user", hint: "Say no, you are fine.", correct: "لَا ، أَنَا بِخَيْرٍ .", options: ["لَا ، أَنَا بِخَيْرٍ .", "نَعَمْ ، أَنَا مَرِيضٌ .", "نَعَمْ ، الْمَسْجِدُ قَرِيبٌ .", "لَا ، أَنَا كَسْلَانُ ."] },
+                    { type: "pc", text: "أَنْتَ كَسْلَانُ ." },
+                    { type: "user", hint: "Say this is true, and apologize.", correct: "هَذَا صَحِيحٌ . آسِفٌ .", options: ["هَذَا صَحِيحٌ . آسِفٌ .", "لَا ، أَنَا نَشِيطٌ .", "أَنْتَ كَسْلَانُ أَيْضاً.", "مَاذَا تَقُولُ ؟"] },
+                    { type: "pc", text: "أَنَا ذَاهِبٌ إِلَى الْمَسْجِدِ ." },
+                    { type: "user", hint: "Tell him to wait, you are going with him.", correct: "انْتَظِرْ ، أَنَا ذَاهِبٌ مَعَكَ .", options: ["انْتَظِرْ ، أَنَا ذَاهِبٌ مَعَكَ .", "مَعَ السَّلَامَةِ .", "اذْهَبْ وَحْدَكَ .", "أَنَا ذَاهِبٌ إِلَى الْبَيْتِ ."] }
+                ]
+            },
+            6: {
+                title: "التدريب ٦: حوار المسجد (دور صابر)",
+                shortTitle: "دور صابر",
+                instruction: "Play the role of Sabir. Choose the correct response.",
+                userRole: "صَابِر",
+                pcRole: "صَادِق",
+                steps: [
+                    { type: "pc", text: "هَذَا أَذَانُ الْعَصْرِ ." },
+                    { type: "user", hint: "Tell him let's go to the mosque.", correct: "هَيَّا بِنَا إِلَى الْمَسْجِدِ .", options: ["هَيَّا بِنَا إِلَى الْمَسْجِدِ .", "هَيَّا نَنَامُ .", "هَذَا أَذَانُ الظُّهْرِ .", "الْمَسْجِدُ بَعِيدٌ ."] },
+                    { type: "pc", text: "أَنَا أُصَلِّي فِي الْبَيْتِ ." },
+                    { type: "user", hint: "Say prayer in the mosque is better.", correct: "الصَّلَاةُ فِي الْمَسْجِدِ أَفْضَلُ.", options: ["الصَّلَاةُ فِي الْمَسْجِدِ أَفْضَلُ.", "الصَّلَاةُ فِي الْبَيْتِ أَفْضَلُ.", "حَسَناً ، صَلِّ فِي الْبَيْتِ.", "أَنْتَ كَسْلَانُ ."] },
+                    { type: "pc", text: "الْمَسْجِدُ بَعِيدٌ ." },
+                    { type: "user", hint: "Say the mosque is near, and ask if he is sick.", correct: "الْمَسْجِدُ قَرِيبٌ . هَلْ أَنْتَ مَرِيضٌ ؟", options: ["الْمَسْجِدُ قَرِيبٌ . هَلْ أَنْتَ مَرِيضٌ ؟", "نَعَمْ ، الْمَسْجِدُ بَعِيدٌ .", "أَنْتَ بِخَيْرٍ .", "لِمَاذَا لَا تَذْهَبُ ؟"] },
+                    { type: "pc", text: "لَا ، أَنَا بِخَيْرٍ ." },
+                    { type: "user", hint: "Tell him he is lazy.", correct: "أَنْتَ كَسْلَانُ .", options: ["أَنْتَ كَسْلَانُ .", "أَنْتَ نَشِيطٌ .", "هَذَا صَحِيحٌ .", "الْحَمْدُ لِلَّهِ ."] },
+                    { type: "pc", text: "هَذَا صَحِيحٌ . آسِفٌ ." },
+                    { type: "user", hint: "Say you are going to the mosque.", correct: "أَنَا ذَاهِبٌ إِلَى الْمَسْجِدِ .", options: ["أَنَا ذَاهِبٌ إِلَى الْمَسْجِدِ .", "انْتَظِرْ قَلِيلاً .", "سَأُصَلِّي فِي الْبَيْتِ .", "هَيَّا بِنَا ."] },
+                    { type: "pc", text: "انْتَظِرْ ، أَنَا ذَاهِبٌ مَعَكَ ." }
+                ]
+            }
+        };
+
+        const roleClassMap = {
+            "مُصْطَفَى": "mustafa",
+            "قُصَيّ": "qusai",
+            "عِصَام": "issam",
+            "صَالِح": "saleh",
+            "صَادِق": "sadiq",
+            "صَابِر": "sabir"
+        };
+
+        const TOTAL_LEVELS = 6;
+        const TEACHER_PHONE = "201129212578";
+
+        // --- State Variables ---
+        let unlockedLevels = 1; 
+        let score = 0;
+        let globalCorrectCount = 0;
+        let globalWrongCount = 0;
+        let errorLog = []; 
+        let levelTimeTracker = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }; 
+        
+        let currentLevelIndex = 1;
+        let currentLevelData = null;
+        let timerInterval;
+        let totalSecondsPlayed = 0;
+        
+        // Chat / Roleplay Engine State
+        let stepIndex = 0;
+        let reviewQueue = [];
+        let isReviewing = false;
+        let questionsAnsweredInLevel = 0;
+        let totalExpectedInLevel = 0;
+        let currentReviewItem = null;
+
+        // --- Audio Context ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(frequency, duration, type = 'sine') {
+            try {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+        function playSuccess() { playTone(600, 0.1, 'triangle'); setTimeout(()=>playTone(800, 0.15, 'triangle'), 100); }
+        function playError() { playTone(300, 0.2, 'sawtooth'); }
+        function playWin() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 0.2, 'square'), i * 150)); }
+
+        // --- Initialization ---
+        window.onload = () => {
+            setTimeout(() => {
+                const screen = document.getElementById('loading-screen');
+                if(screen) screen.classList.add('opacity-0');
+                setTimeout(() => { if(screen) screen.remove(); init(); }, 500); 
+            }, 4500); 
+        };
+
+        function init() {
+            updateGlobalScoresUI();
+            renderMenu();
+            
+            document.getElementById('btn-home').addEventListener('click', showMenu);
+            document.getElementById('btn-next').addEventListener('click', onNextClicked);
+            
+            timerInterval = setInterval(() => { 
+                if(!document.getElementById('screen-game').classList.contains('hidden-screen')) {
+                    totalSecondsPlayed++; 
+                    levelTimeTracker[currentLevelIndex]++;
+                }
+            }, 1000);
+        }
+
+        function switchScreen(screenId) {
+            ['screen-menu', 'screen-game', 'screen-report'].forEach(id => {
+                document.getElementById(id).classList.add('hidden-screen');
+            });
+            document.getElementById(screenId).classList.remove('hidden-screen');
+            document.getElementById('btn-home').classList.toggle('hidden', screenId === 'screen-menu' || screenId === 'screen-report');
+        }
+
+        function showMenu() {
+            switchScreen('screen-menu');
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('phase-grid');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= TOTAL_LEVELS; i++) {
+                const isUnlocked = i <= unlockedLevels;
+                const isCompleted = i < unlockedLevels; 
+                const btn = document.createElement('button');
+                
+                if (isUnlocked) {
+                    if (isCompleted) {
+                        btn.className = `btn-game p-6 rounded-3xl flex flex-col items-center justify-center gap-2 border-2 bg-green-50 border-green-300 text-green-700 hover:bg-green-100 shadow-sm`;
+                    } else {
+                        btn.className = `btn-game p-6 rounded-3xl flex flex-col items-center justify-center gap-2 border-2 bg-white border-blue-400 text-blue-600 hover:bg-blue-50 shadow-md transform hover:scale-105`;
+                    }
+                } else {
+                    btn.className = `p-6 rounded-3xl flex flex-col items-center justify-center gap-2 border-2 bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed opacity-70`;
+                }
+                
+                let icon = isUnlocked ? (isCompleted ? '✅' : '🎮') : '🔒';
+                
+                btn.innerHTML = `
+                    <div class="text-4xl md:text-5xl mb-2">${icon}</div>
+                    <div class="font-bold text-xl">${gameData[i].shortTitle}</div>
+                    <div class="text-sm font-semibold opacity-80">محاكاة</div>
+                `;
+                
+                if (isUnlocked) btn.onclick = () => startLevel(i);
+                else btn.disabled = true;
+
+                container.appendChild(btn);
+            }
+            document.getElementById('screen-menu').classList.remove('hidden-screen');
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startLevel(levelNum) {
+            currentLevelIndex = levelNum;
+            currentLevelData = gameData[levelNum];
+            
+            document.getElementById('level-title').innerText = currentLevelData.title;
+            document.getElementById('level-instruction').innerText = currentLevelData.instruction;
+            document.getElementById('next-btn-container').classList.add('hidden');
+            
+            document.getElementById('chat-container').innerHTML = '';
+            
+            stepIndex = 0;
+            reviewQueue = [];
+            isReviewing = false;
+            
+            totalExpectedInLevel = currentLevelData.steps.filter(s => s.type === "user").length;
+            questionsAnsweredInLevel = 0;
+            updateProgressBar();
+
+            switchScreen('screen-game');
+            processNextStep();
+        }
+
+        function updateProgressBar() {
+            let progressPercent = (questionsAnsweredInLevel / totalExpectedInLevel) * 100;
+            if (progressPercent > 100) progressPercent = 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+        }
+
+        function appendBubble(speakerType, role, text) {
+            const alignClass = (speakerType === "user") ? "bubble-left" : "bubble-right";
+            const colorClass = roleClassMap[role] || "mustafa"; // fallback
+            const html = `<div class="chat-bubble ${colorClass} ${alignClass}"><span class="speaker-tag">${role}</span>${text}</div>`;
+            
+            const container = document.getElementById('chat-container');
+            container.insertAdjacentHTML('beforeend', html);
+            
+            setTimeout(() => {
+                container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+            }, 50);
+        }
+
+        function showWaitingOverlay(show) {
+            const overlay = document.getElementById('waiting-overlay');
+            const options = document.getElementById('options-grid');
+            const qText = document.getElementById('question-text');
+            
+            if (show) {
+                overlay.classList.remove('hidden');
+                options.innerHTML = '';
+                qText.innerHTML = '';
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function processNextStep() {
+            showWaitingOverlay(true);
+            
+            if (!isReviewing) {
+                if (stepIndex >= currentLevelData.steps.length) {
+                    if (reviewQueue.length > 0) {
+                        isReviewing = true;
+                        document.getElementById('chat-container').insertAdjacentHTML('beforeend', 
+                            `<div class="w-full text-center my-6 border-b-2 border-yellow-300 pb-2"><span class="bg-yellow-100 text-yellow-800 font-bold px-4 py-2 rounded-full text-base shadow-sm">مَرْحَلَةُ المُراجَعَة 🔄</span></div>`
+                        );
+                        setTimeout(processNextStep, 800);
+                    } else {
+                        onLevelCompleted();
+                    }
+                    return;
+                }
+                
+                let step = currentLevelData.steps[stepIndex];
+                
+                if (step.type === "pc") {
+                    setTimeout(() => {
+                        appendBubble("pc", currentLevelData.pcRole, step.text);
+                        stepIndex++;
+                        setTimeout(processNextStep, 800);
+                    }, 600);
+                } else if (step.type === "user") {
+                    renderUserOptions(step);
+                }
+            } else {
+                if (reviewQueue.length === 0) {
+                    onLevelCompleted();
+                    return;
+                }
+                currentReviewItem = reviewQueue.shift();
+                renderUserOptions(currentReviewItem);
+            }
+        }
+
+        function renderUserOptions(stepData) {
+            showWaitingOverlay(false);
+            
+            const qText = document.getElementById('question-text');
+            qText.innerHTML = `
+                <div class="text-gray-500 text-base md:text-lg mb-2 font-sans text-right block" dir="rtl">
+                    دورك الآن: <strong>${currentLevelData.userRole}</strong>
+                </div>
+                <div class="eng-text text-xl md:text-2xl text-blue-800 font-bold w-full text-left leading-relaxed">
+                    ${stepData.hint}
+                    ${isReviewing ? '<br><span class="review-badge inline-block mt-3">إِعَادَةٌ لِلتَّثْبِيتِ 🔄</span>' : ''}
+                </div>
+            `;
+            
+            let shuffledOptions = shuffleArray([...stepData.options]);
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+
+            shuffledOptions.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => handleUserChoice(btn, opt, stepData);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function handleUserChoice(selectedBtn, selectedText, stepData) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            questionsAnsweredInLevel++;
+
+            if (selectedText === stepData.correct) {
+                selectedBtn.classList.add('correct-bg', 'border-green-500', 'anim-pop');
+                playSuccess();
+                
+                appendBubble("user", currentLevelData.userRole, stepData.correct);
+                registerCorrectAnswer();
+                updateProgressBar();
+
+                if (!isReviewing) stepIndex++;
+                
+                setTimeout(processNextStep, 800);
+            } else {
+                selectedBtn.classList.add('wrong-bg', 'anim-shake');
+                playError();
+                
+                buttons.forEach(btn => {
+                    if (btn.textContent === stepData.correct) btn.classList.add('correct-bg');
+                });
+
+                if (!isReviewing && !stepData.wasMissed) {
+                    stepData.wasMissed = true; 
+                    reviewQueue.push(stepData, stepData);
+                    totalExpectedInLevel += 2;
+                    registerWrongAnswer(stepData.hint, selectedText, stepData.correct);
+                } else if (isReviewing) {
+                    reviewQueue.push(stepData, stepData);
+                    totalExpectedInLevel += 2;
+                    registerWrongAnswer(stepData.hint + " (Review)", selectedText, stepData.correct);
+                }
+                
+                updateProgressBar();
+
+                setTimeout(() => {
+                    appendBubble("user", currentLevelData.userRole, stepData.correct);
+                    if (!isReviewing) stepIndex++;
+                    processNextStep();
+                }, 1600);
+            }
+        }
+
+        // --- Scoring Logic ---
+        function updateGlobalScoresUI() {
+            document.getElementById('global-score').textContent = score;
+            document.getElementById('global-correct').textContent = globalCorrectCount;
+            document.getElementById('global-wrong').textContent = globalWrongCount;
+        }
+
+        function updateScoreAnimate(points) {
+            score += points;
+            if (score < 0) score = 0; 
+            
+            const badge = document.getElementById('score-badge');
+            updateGlobalScoresUI();
+            
+            badge.classList.remove('text-yellow-900', 'bg-yellow-100', 'border-yellow-400');
+            if (points > 0) {
+                badge.classList.add('anim-bounce', 'text-green-800', 'bg-green-200', 'border-green-500');
+            } else {
+                badge.classList.add('anim-shake', 'text-red-800', 'bg-red-200', 'border-red-500');
+            }
+            
+            setTimeout(() => {
+                badge.classList.remove('anim-bounce', 'anim-shake', 'text-green-800', 'bg-green-200', 'border-green-500', 'text-red-800', 'bg-red-200', 'border-red-500');
+                badge.classList.add('text-yellow-900', 'bg-yellow-100', 'border-yellow-400');
+            }, 500);
+        }
+
+        function registerCorrectAnswer() { globalCorrectCount++; updateScoreAnimate(10); }
+
+        function registerWrongAnswer(qText, studentAns, correctAns) {
+            globalWrongCount++;
+            updateScoreAnimate(-5);
+            errorLog.push({ 
+                level: gameData[currentLevelIndex].shortTitle, 
+                question: qText, 
+                studentAnswer: studentAns, 
+                correctAnswer: correctAns 
+            });
+        }
+
+        function onLevelCompleted() {
+            playWin();
+            showWaitingOverlay(false);
+            const bar = document.getElementById('progress-bar');
+            if (bar) bar.style.width = '100%';
+            
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            
+            if (currentLevelIndex === unlockedLevels && unlockedLevels < TOTAL_LEVELS) unlockedLevels++;
+            
+            const nextBtnContainer = document.getElementById('next-btn-container');
+            const nextBtn = document.getElementById('btn-next');
+            
+            if (currentLevelIndex === TOTAL_LEVELS) {
+                nextBtn.innerHTML = 'عَرْضُ النَّتِيجَةِ النِّهَائِيَّة 🏆';
+                nextBtn.className = "bg-green-500 hover:bg-green-600 text-white px-12 py-4 rounded-full font-bold text-2xl border-b-4 border-green-700 btn-game shadow-lg flex items-center gap-3 anim-pop";
+            } else {
+                nextBtn.innerHTML = 'التَّالِي 🚀';
+                nextBtn.className = "bg-blue-500 hover:bg-blue-600 text-white px-12 py-4 rounded-full font-bold text-2xl border-b-4 border-blue-700 btn-game shadow-lg flex items-center gap-3 anim-pop";
+            }
+
+            nextBtnContainer.classList.remove('hidden');
+            setTimeout(() => { nextBtnContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+        }
+
+        function onNextClicked() {
+            if (currentLevelIndex < TOTAL_LEVELS) {
+                startLevel(currentLevelIndex + 1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                showReport();
+            }
+        }
+
+        // --- Report System ---
+        function formatTimeText(seconds) {
+            let m = Math.floor(seconds / 60); let s = seconds % 60;
+            return `${m} دقيقة و ${s} ثانية`;
+        }
+
+        function showReport() {
+            switchScreen('screen-report');
+            document.getElementById('report-score').textContent = score;
+            document.getElementById('report-correct').textContent = globalCorrectCount;
+            document.getElementById('report-wrong').textContent = globalWrongCount;
+            document.getElementById('report-time').textContent = formatTimeText(totalSecondsPlayed);
+            
+            if (errorLog.length > 0) {
+                document.getElementById('error-log-container').classList.remove('hidden');
+                const tbody = document.getElementById('error-log-body');
+                tbody.innerHTML = '';
+                errorLog.forEach(err => {
+                    tbody.innerHTML += `
+                        <tr class="border-b border-red-100 hover:bg-red-50 transition">
+                            <td class="p-4 font-bold text-center text-sm">${err.level}</td>
+                            <td class="p-4 text-gray-800 leading-relaxed eng-text text-left">${err.question}</td>
+                            <td class="p-4 text-red-600 font-bold text-right" dir="rtl">${err.studentAnswer}</td>
+                            <td class="p-4 text-green-600 font-bold text-right" dir="rtl">${err.correctAnswer}</td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            const end = Date.now() + 3 * 1000;
+            const colors = ['#bb0000', '#ffffff', '#4ade80', '#3b82f6'];
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function generateReportText() {
+            let text = `🏆 *تقرير أداء البطل نوح - محاكاة المحادثة* 🏆\n\n`;
+            text += `⭐️ *النقاط النهائية:* ${score}\n`;
+            text += `✅ *الإجابات الصحيحة:* ${globalCorrectCount}\n`;
+            text += `❌ *الإجابات الخاطئة:* ${globalWrongCount}\n`;
+            text += `⏱️ *الوقت الإجمالي:* ${formatTimeText(totalSecondsPlayed)}\n\n`;
+
+            text += `📊 *تفصيل الوقت لكل تدريب:*\n`;
+            for(let i=1; i<=TOTAL_LEVELS; i++) {
+                if (levelTimeTracker[i] > 0) {
+                    text += `- ${gameData[i].shortTitle}: ${formatTimeText(levelTimeTracker[i])}\n`;
+                }
+            }
+
+            if (errorLog.length > 0) {
+                text += `\n📝 *سجل الأخطاء:* \n`;
+                errorLog.forEach((err, index) => {
+                    text += `\n(${index + 1}) [${err.level}]\n`;
+                    text += `❓ التوجيه: ${err.question}\n`; 
+                    text += `❌ إجابة نوح: ${err.studentAnswer}\n`;
+                    text += `✅ الصحيح: ${err.correctAnswer}\n`;
+                });
+            } else {
+                text += `\n🌟 *ممتاز جداً! لم يقع نوح في أي خطأ.* 🌟\n`;
+            }
+            return text;
+        }
+
+        window.sendReportToTeacher = function() {
+            const btn = document.getElementById('btn-whatsapp');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            const reportText = generateReportText();
+            const textarea = document.createElement('textarea');
+            textarea.value = reportText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
+            } catch (err) {}
+            document.body.removeChild(textarea);
+
+            setTimeout(() => {
+                const encodedText = encodeURIComponent(reportText);
+                const waUrl = `https://wa.me/${TEACHER_PHONE}?text=${encodedText}`;
+                window.open(waUrl, '_blank');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }, 1200);
+        };
+    </script>
+</body>
+</html>
